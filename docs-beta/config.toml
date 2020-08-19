@@ -9,6 +9,8 @@ title = "M3DB Documentation"
 metaDataFormat = "yaml"
 defaultContentLanguageInSubdir= true
 
+staticDir = ["static"]
+
 # Highlighting config.
 pygmentsCodeFences = true
 pygmentsUseClasses = false
@@ -81,6 +83,10 @@ offlineSearch = false
   # Change default color scheme with a variant one. Can be "red", "blue", "green".
   themeVariant = ""
   twitter = "m3db_io"
+  
+  [params.api]
+    localCordinator = "http://localhost:7201"
+    apiEndpoint = "/api/v1/"
 
 # TODO: Do not like doing this really
 [markup]
