@@ -9,8 +9,5 @@
   # directory located at the absolute path "root/project/build-output"
   publish = "docs-beta/public"
 
-[context."braskin/hugo_site"]
-  command = "hugo"
-
 [context."chrischinch/quickstart"]
   command = "hugo"  
