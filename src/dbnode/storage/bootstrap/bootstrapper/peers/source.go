@@ -37,11 +37,13 @@ import (
 	"github.com/m3db/m3/src/dbnode/storage/bootstrap/bootstrapper"
 	"github.com/m3db/m3/src/dbnode/storage/bootstrap/result"
 	"github.com/m3db/m3/src/dbnode/storage/index"
+	"github.com/m3db/m3/src/dbnode/storage/index/compaction"
 	"github.com/m3db/m3/src/dbnode/storage/index/convert"
 	"github.com/m3db/m3/src/dbnode/storage/series"
 	"github.com/m3db/m3/src/dbnode/topology"
 	"github.com/m3db/m3/src/dbnode/tracepoint"
 	"github.com/m3db/m3/src/m3ninx/doc"
+	"github.com/m3db/m3/src/m3ninx/index/segment/fst"
 	idxpersist "github.com/m3db/m3/src/m3ninx/persist"
 	xclose "github.com/m3db/m3/src/x/close"
 	"github.com/m3db/m3/src/x/context"
@@ -56,11 +58,9 @@ import (
 )
 
 type peersSource struct {
-	opts           Options
-	log            *zap.Logger
-	nowFn          clock.NowFn
-	persistManager *bootstrapper.SharedPersistManager
-	compactor      *bootstrapper.SharedCompactor
+	opts  Options
+	log   *zap.Logger
+	nowFn clock.NowFn
 }
 
 type persistenceFlush struct {
@@ -80,12 +80,6 @@ func newPeersSource(opts Options) (bootstrap.Source, error) {
 		opts:  opts,
 		log:   iopts.Logger().With(zap.String("bootstrapper", "peers")),
 		nowFn: opts.ResultOptions().ClockOptions().NowFn(),
-		persistManager: &bootstrapper.SharedPersistManager{
-			Mgr: opts.PersistManager(),
-		},
-		compactor: &bootstrapper.SharedCompactor{
-			Compactor: opts.Compactor(),
-		},
 	}, nil
 }
 
@@ -170,13 +164,6 @@ func (s *peersSource) Read(
 		zap.Duration("took", s.nowFn().Sub(start)))
 	span.LogEvent("bootstrap_data_done")
 
-	alloc := s.opts.ResultOptions().IndexDocumentsBuilderAllocator()
-	segBuilder, err := alloc()
-	if err != nil {
-		return bootstrap.NamespaceResults{}, err
-	}
-	builder := result.NewIndexBuilder(segBuilder)
-
 	start = s.nowFn()
 	s.log.Info("bootstrapping index metadata start")
 	span.LogEvent("bootstrap_index_start")
@@ -193,7 +180,6 @@ func (s *peersSource) Read(
 
 		r, err := s.readIndex(md,
 			namespace.IndexRunOptions.ShardTimeRanges,
-			builder,
 			namespace.IndexRunOptions.RunOptions,
 			span)
 		if err != nil {
@@ -676,7 +662,6 @@ func (s *peersSource) flush(
 func (s *peersSource) readIndex(
 	ns namespace.Metadata,
 	shardTimeRanges result.ShardTimeRanges,
-	builder *result.IndexBuilder,
 	opts bootstrap.RunOptions,
 	span opentracing.Span,
 ) (result.IndexBootstrapResult, error) {
@@ -703,8 +688,9 @@ func (s *peersSource) readIndex(
 				return fs.NewReader(bytesPool, fsOpts)
 			},
 		})
-		resultLock = &sync.Mutex{}
-		readersCh  = make(chan bootstrapper.TimeWindowReaders)
+		resultLock              = &sync.Mutex{}
+		indexSegmentConcurrency = s.opts.IndexSegmentConcurrency()
+		readersCh               = make(chan bootstrapper.TimeWindowReaders, indexSegmentConcurrency)
 	)
 	s.log.Info("peers bootstrapper bootstrapping index for ranges",
 		zap.Int("shards", count),
@@ -727,6 +713,64 @@ func (s *peersSource) readIndex(
 		NowFn:                     s.nowFn,
 	})
 
+	var buildWg sync.WaitGroup
+	for i := 0; i < indexSegmentConcurrency; i++ {
+		alloc := s.opts.ResultOptions().IndexDocumentsBuilderAllocator()
+		segBuilder, err := alloc()
+		if err != nil {
+			return nil, err
+		}
+
+		builder := result.NewIndexBuilder(segBuilder)
+
+		indexOpts := s.opts.IndexOptions()
+		compactor, err := compaction.NewCompactor(indexOpts.DocumentArrayPool(),
+			index.DocumentArrayPoolCapacity,
+			indexOpts.SegmentBuilderOptions(),
+			indexOpts.FSTSegmentOptions(),
+			compaction.CompactorOptions{
+				FSTWriterOptions: &fst.WriterOptions{
+					// DisableRegistry is set to true to trade a larger FST size
+					// for a faster FST compaction since we want to reduce the end
+					// to end latency for time to first index a metric.
+					DisableRegistry: true,
+				},
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		persistManager, err := fs.NewPersistManager(s.opts.FilesystemOptions())
+		if err != nil {
+			return nil, err
+		}
+
+		buildWg.Add(1)
+		go func() {
+			s.processReadersWorker(ns, r, readersCh, builder, readerPool, idxOpts,
+				&bootstrapper.SharedPersistManager{Mgr: persistManager},
+				&bootstrapper.SharedCompactor{Compactor: compactor},
+				resultLock)
+			buildWg.Done()
+		}()
+	}
+
+	buildWg.Wait()
+
+	return r, nil
+}
+
+func (s *peersSource) processReadersWorker(
+	ns namespace.Metadata,
+	r result.IndexBootstrapResult,
+	readersCh <-chan bootstrapper.TimeWindowReaders,
+	builder *result.IndexBuilder,
+	readerPool *bootstrapper.ReaderPool,
+	idxOpts namespace.IndexOptions,
+	persistManager *bootstrapper.SharedPersistManager,
+	compactor *bootstrapper.SharedCompactor,
+	resultLock *sync.Mutex,
+) {
 	for timeWindowReaders := range readersCh {
 		// NB(bodu): Since we are re-using the same builder for all bootstrapped index blocks,
 		// it is not thread safe and requires reset after every processed index block.
@@ -740,40 +784,13 @@ func (s *peersSource) readIndex(
 			timeWindowReaders,
 			readerPool,
 			idxOpts,
+			persistManager,
+			compactor,
+			resultLock,
 		)
 		s.markRunResultErrorsAndUnfulfilled(resultLock, r, timeWindowReaders.Ranges,
 			remainingRanges, timesWithErrors)
 	}
-
-	return r, nil
-}
-
-func (s *peersSource) readNextEntryAndMaybeIndex(
-	r fs.DataFileSetReader,
-	batch []doc.Document,
-	builder *result.IndexBuilder,
-) ([]doc.Document, error) {
-	// If performing index run, then simply read the metadata and add to segment.
-	id, tagsIter, _, _, err := r.ReadMetadata()
-	if err != nil {
-		return batch, err
-	}
-
-	d, err := convert.FromSeriesIDAndTagIter(id, tagsIter)
-	// Finalize the ID and tags.
-	id.Finalize()
-	tagsIter.Close()
-	if err != nil {
-		return batch, err
-	}
-
-	batch = append(batch, d)
-
-	if len(batch) >= index.DocumentArrayPoolCapacity {
-		return builder.FlushBatch(batch)
-	}
-
-	return batch, nil
 }
 
 func (s *peersSource) processReaders(
@@ -783,6 +800,9 @@ func (s *peersSource) processReaders(
 	timeWindowReaders bootstrapper.TimeWindowReaders,
 	readerPool *bootstrapper.ReaderPool,
 	idxOpts namespace.IndexOptions,
+	persistManager *bootstrapper.SharedPersistManager,
+	compactor *bootstrapper.SharedCompactor,
+	resultLock *sync.Mutex,
 ) (result.ShardTimeRanges, []time.Time) {
 	var (
 		docsPool        = s.opts.IndexOptions().DocumentArrayPool()
@@ -805,7 +825,9 @@ func (s *peersSource) processReaders(
 				err       error
 			)
 
+			resultLock.Lock()
 			r.IndexResults().AddBlockIfNotExists(start, idxOpts)
+			resultLock.Unlock()
 			numEntries := reader.Entries()
 			for i := 0; err == nil && i < numEntries; i++ {
 				batch, err = s.readNextEntryAndMaybeIndex(reader, batch, builder)
@@ -828,9 +850,11 @@ func (s *peersSource) processReaders(
 					shard,
 					xtime.NewRanges(timeRange),
 				)
+				resultLock.Lock()
 				err = r.IndexResults().MarkFulfilled(start, fulfilled,
 					// NB(bodu): By default, we always load bootstrapped data into the default index volume.
 					idxpersist.DefaultIndexVolumeType, idxOpts)
+				resultLock.Unlock()
 			}
 
 			if err == nil {
@@ -889,7 +913,7 @@ func (s *peersSource) processReaders(
 			ns,
 			requestedRanges,
 			builder.Builder(),
-			s.persistManager,
+			persistManager,
 			s.opts.ResultOptions(),
 			existingIndexBlock.Fulfilled(),
 			blockStart,
@@ -909,7 +933,7 @@ func (s *peersSource) processReaders(
 			ns,
 			requestedRanges,
 			builder.Builder(),
-			s.compactor,
+			compactor,
 			s.opts.ResultOptions(),
 			s.opts.IndexOptions().MmapReporter(),
 			blockStart,
@@ -935,7 +959,9 @@ func (s *peersSource) processReaders(
 	newFulfilled.AddRanges(indexBlock.Fulfilled())
 
 	// Replace index block for default index volume type.
+	resultLock.Lock()
 	r.IndexResults()[xtime.ToUnixNano(blockStart)].SetBlock(idxpersist.DefaultIndexVolumeType, result.NewIndexBlock(segments, newFulfilled))
+	resultLock.Unlock()
 
 	// Return readers to pool.
 	for _, shardReaders := range timeWindowReaders.Readers {
@@ -947,6 +973,34 @@ func (s *peersSource) processReaders(
 	}
 
 	return remainingRanges, timesWithErrors
+}
+
+func (s *peersSource) readNextEntryAndMaybeIndex(
+	r fs.DataFileSetReader,
+	batch []doc.Document,
+	builder *result.IndexBuilder,
+) ([]doc.Document, error) {
+	// If performing index run, then simply read the metadata and add to segment.
+	id, tagsIter, _, _, err := r.ReadMetadata()
+	if err != nil {
+		return batch, err
+	}
+
+	d, err := convert.FromSeriesIDAndTagIter(id, tagsIter)
+	// Finalize the ID and tags.
+	id.Finalize()
+	tagsIter.Close()
+	if err != nil {
+		return batch, err
+	}
+
+	batch = append(batch, d)
+
+	if len(batch) >= index.DocumentArrayPoolCapacity {
+		return builder.FlushBatch(batch)
+	}
+
+	return batch, nil
 }
 
 // markRunResultErrorsAndUnfulfilled checks the list of times that had errors and makes
