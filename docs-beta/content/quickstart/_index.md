@@ -1,6 +1,5 @@
 ---
 linktitle: "Quickstart"
-date: 2020-04-21T20:46:17-04:00
 weight: 3
 ---
 
@@ -36,7 +35,6 @@ The Docker container exposes three ports:
 
 -   `7201` to manage the cluster topology, you make most API calls to this endpoint
 -   `7203` for Prometheus to scrape the metrics produced by M3DB and M3Coordinator
--   `9003` to read and write metrics
 
 The command below creates a persistent data directory on the host operating system to maintain durability and persistence between container restarts.
 
@@ -45,7 +43,7 @@ The command below creates a persistent data directory on the host operating syst
 
 ```shell
 docker pull quay.io/m3db/m3dbnode:latest
-docker run -p 7201:7201 -p 7203:7203 -p 9003:9003 --name m3db -v $(pwd)/m3db_data:/var/lib/m3db quay.io/m3db/m3dbnode:latest
+docker run -p 7201:7201 -p 7203:7203 --name m3db -v $(pwd)/m3db_data:/var/lib/m3db quay.io/m3db/m3dbnode:latest
 ```
 
 {{% /tab %}}
@@ -64,7 +62,7 @@ When running the command above on Docker for Mac, Docker for Windows, and some L
 
 ## Configuration
 
-The single-node cluster Docker image uses this [sample configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml).
+The single-node cluster Docker image uses this [sample configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml) by default.
 
 The file groups configuration into `coordinator` or `db` sections that represent the `M3Coordinator` and `M3DB` instances part of single-node cluster.
 
@@ -74,13 +72,16 @@ You can find more information on configuring M3DB in the [operational guides sec
 
 ## Organizing Data with Placements and Namespaces
 
+A time series database (TSDBs) typically consist of one node (or instance) to store metrics data. This setup is simple to use, but has issues with scalability over time as the quantity of metrics data written and read increases.
+
+As a distributed TSDB M3DB helps solves this problem by spreading metrics data, and demand for that data, across multiple nodes in a cluster. M3DB does this by splitting data into segments that match certain criteria (such as above a certain value) across nodes into {{< glossary_tooltip text="shards" term_id="shards" >}}.
+
 <!-- TODO: Find an image -->
 
-M3DB organizes data in similar ways to other databases but adds extra concepts that reflect the time series metrics typically stored with M3DB.
+If you've worked with a distributed database before, then these concepts are probably familiar to you, but M3DB uses different terminology to represent some concepts.
 
-Every cluster has **one** {{< glossary_tooltip text="placement" term_id="placement" >}} that maps cluster shard replicas to nodes in the cluster.
-
-A cluster can have **0 or more** {{< glossary_tooltip text="namespaces" term_id="namespace" >}} that are similar conceptually to tables in other databases, and each node serves every namespace for the shards it owns.
+-   Every cluster has **one** {{< glossary_tooltip text="placement" term_id="placement" >}} that maps shards to nodes in the cluster.
+-   A cluster can have **0 or more** {{< glossary_tooltip text="namespaces" term_id="namespace" >}} that are similar conceptually to tables in other databases, and each node serves every namespace for the shards it owns.
 
 <!-- TODO: Image -->
 
@@ -265,7 +266,17 @@ curl {{% apiendpoint %}}placement | jq .
 [Read more about the bootstrapping process](https://docs.m3db.io/operational_guide/bootstrapping_crash_recovery/).
 {{% /notice %}}
 
+### View Details of a Namespace
+
+<!-- TODO: fill out 
+
+You can also view the attributes of all namespaces by calling the _namespaces_ endpoint
+curl <http://localhost:7201/api/v1/namespace> | jq .
+-->
+
 ## Writing and Querying Metrics
+
+<!-- Should this go under the querying section below? Or maybe here we can say m3 can accept both graphite and prometheus style metrics on the write side? -->
 
 M3DB supports two query engines:
 
@@ -274,7 +285,11 @@ M3DB supports two query engines:
 
 ### Writing Metrics
 
-As M3DB is a time series database (TSDB), metric data consists of a value, a timestamp, and tags to bring context and meaning to the metric.
+M3 supports ingesting [Graphite](https://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-plaintext-protocol)…, and Prometheus formatted metrics. 
+
+<!-- TODO: statsd -->
+
+This quickstart focuses on Prometheus metrics which consist of a value, a timestamp, and tags to bring context and meaning to the metric.
 
 You can write metrics using one of two endpoints:
 
