@@ -74,7 +74,7 @@ You can find more information on configuring M3DB in the [operational guides sec
 
 A time series database (TSDBs) typically consist of one node (or instance) to store metrics data. This setup is simple to use, but has issues with scalability over time as the quantity of metrics data written and read increases.
 
-As a distributed TSDB M3DB helps solves this problem by spreading metrics data, and demand for that data, across multiple nodes in a cluster. M3DB does this by splitting data into segments that match certain criteria (such as above a certain value) across nodes into {{< glossary_tooltip text="shards" term_id="shards" >}}.
+As a distributed TSDB M3DB helps solves this problem by spreading metrics data, and demand for that data, across multiple nodes in a cluster. M3DB does this by splitting data into segments that match certain criteria (such as above a certain value) across nodes into {{< glossary_tooltip text="shards" term_id="shard" >}}.
 
 <!-- TODO: Find an image -->
 
