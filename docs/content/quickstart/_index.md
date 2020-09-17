@@ -268,33 +268,72 @@ curl {{% apiendpoint %}}placement | jq .
 
 ### View Details of a Namespace
 
-<!-- TODO: fill out 
-
 You can also view the attributes of all namespaces by calling the _namespaces_ endpoint
-curl <http://localhost:7201/api/v1/namespace> | jq .
--->
+
+{{< tabs name="check_namespaces" >}}
+{{% tab name="Command" %}}
+
+```shell
+curl {{% apiendpoint %}}namespace | jq .
+```
+
+{{% notice tip %}}
+Add `?debug=1` to the request to convert nano units in the output into standard units.
+{{% /notice %}}
+
+{{% /tab %}}
+{{% tab name="Output" %}}
+
+```json
+{
+  "registry": {
+    "namespaces": {
+      "default": {
+        "bootstrapEnabled": true,
+        "flushEnabled": true,
+        "writesToCommitLog": true,
+        "cleanupEnabled": true,
+        "repairEnabled": false,
+        "retentionOptions": {
+          "retentionPeriodNanos": "43200000000000",
+          "blockSizeNanos": "1800000000000",
+          "bufferFutureNanos": "120000000000",
+          "bufferPastNanos": "600000000000",
+          "blockDataExpiry": true,
+          "blockDataExpiryAfterNotAccessPeriodNanos": "300000000000",
+          "futureRetentionPeriodNanos": "0"
+        },
+        "snapshotEnabled": true,
+        "indexOptions": {
+          "enabled": true,
+          "blockSizeNanos": "1800000000000"
+        },
+        "schemaOptions": null,
+        "coldWritesEnabled": false,
+        "runtimeOptions": null
+      }
+    }
+  }
+}
+```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 ## Writing and Querying Metrics
 
 <!-- Should this go under the querying section below? Or maybe here we can say m3 can accept both graphite and prometheus style metrics on the write side? -->
 
-M3DB supports two query engines:
-
--   **Prometheus (default)** - robust and commonly-used query language for metrics
--   **M3 Query Engine** - in development higher-performance query engine
-
 ### Writing Metrics
 
-M3 supports ingesting [Graphite](https://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-plaintext-protocol)…, and Prometheus formatted metrics. 
-
-<!-- TODO: statsd -->
+M3 supports ingesting [statsd](https://github.com/statsd/statsd#usage) and [Prometheus](https://prometheus.io/docs/concepts/data_model/) formatted metrics. 
 
 This quickstart focuses on Prometheus metrics which consist of a value, a timestamp, and tags to bring context and meaning to the metric.
 
 You can write metrics using one of two endpoints:
 
 -   _[/prom/remote/write](/m3coordinator/api/remote/)_ - Write a Prometheus remote write query to M3DB with a binary snappy compressed Prometheus WriteRequest protobuf message.
--   _/json/write_ - Write a JSON payload of metrics data.
+-   _/json/write_ - Write a JSON payload of metrics data. This endpoint is quick for testing purposes, but is not as performant for production usage.
 
 For this quickstart, use the _{{% apiendpoint %}}json/write_ endpoint to write a tagged metric to M3DB with the following data in the request body, all fields are required:
 
@@ -329,6 +368,8 @@ Label names may contain ASCII letters, numbers, underscores, and Unicode charact
 {{< /tabs >}}
 
 ### Querying metrics
+
+M3DB supports three query engines: Prometheus (default, Graphite, and the M3 Query Engine.
 
 As this quickstart uses Prometheus as the query engine, you have access to [all the features of PromQL queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). 
 
