@@ -61,4 +61,4 @@ m3db.io/openapi
 .vagrant
 
 #docs ignores
-docs-beta/public
+docs/public

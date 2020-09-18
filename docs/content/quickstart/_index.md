@@ -91,9 +91,9 @@ For example, if the cluster placement states that node A owns shards 1, 2, and 3
 
 This quickstart uses the _{{% apiendpoint %}}database/create_ endpoint that creates a namespace, and the placement if it doesn't already exist based on the `type` argument.
 
-You can create [placements](https://docs.m3db.io/operational_guide/placement_configuration/) and [namespaces](https://docs.m3db.io/operational_guide/namespace_configuration/#advanced-hard-way) separately if you need more control over their settings.
+You can create [placements](/operational_guide/placement_configuration/) and [namespaces](/operational_guide/namespace_configuration/#advanced-hard-way) separately if you need more control over their settings.
 
-The `namespaceName` argument must match the namespace in the `local` section of the `M3Coordinator` YAML configuration. If you [add any namespaces](../operational_guide/namespace_configuration.md) you also need to add them to the `local` section of `M3Coordinator`'s YAML config.
+The `namespaceName` argument must match the namespace in the `local` section of the `M3Coordinator` YAML configuration. If you [add any namespaces](/operational_guide/namespace_configuration.md) you also need to add them to the `local` section of `M3Coordinator`'s YAML config.
 
 {{< tabs name="create_placement_namespace" >}}
 {{% tab name="Command" %}}
@@ -201,7 +201,7 @@ Placement initialization can take a minute or two. Once all the shards have the 
 {"level":"info","ts":1598367624.03023,"msg":"bootstrapped"}
 ```
 
-You can check on the status by calling the _placement_ endpoint:
+You can check on the status by calling the _{{% apiendpoint %}}placement_ endpoint:
 
 {{< tabs name="check_placement" >}}
 {{% tab name="Command" %}}
@@ -263,12 +263,12 @@ curl {{% apiendpoint %}}placement | jq .
 {{< /tabs >}}
 
 {{% notice tip %}}
-[Read more about the bootstrapping process](https://docs.m3db.io/operational_guide/bootstrapping_crash_recovery/).
+[Read more about the bootstrapping process](/operational_guide/bootstrapping_crash_recovery/).
 {{% /notice %}}
 
 ### View Details of a Namespace
 
-You can also view the attributes of all namespaces by calling the _namespaces_ endpoint
+You can also view the attributes of all namespaces by calling the _{{% apiendpoint %}}namespace_ endpoint
 
 {{< tabs name="check_namespaces" >}}
 {{% tab name="Command" %}}
@@ -322,18 +322,16 @@ Add `?debug=1` to the request to convert nano units in the output into standard 
 
 ## Writing and Querying Metrics
 
-<!-- Should this go under the querying section below? Or maybe here we can say m3 can accept both graphite and prometheus style metrics on the write side? -->
-
 ### Writing Metrics
 
-M3 supports ingesting [statsd](https://github.com/statsd/statsd#usage) and [Prometheus](https://prometheus.io/docs/concepts/data_model/) formatted metrics. 
+M3 supports ingesting [statsd](https://github.com/statsd/statsd#usage) and [Prometheus](https://prometheus.io/docs/concepts/data_model/) formatted metrics.
 
 This quickstart focuses on Prometheus metrics which consist of a value, a timestamp, and tags to bring context and meaning to the metric.
 
 You can write metrics using one of two endpoints:
 
--   _[/prom/remote/write](/m3coordinator/api/remote/)_ - Write a Prometheus remote write query to M3DB with a binary snappy compressed Prometheus WriteRequest protobuf message.
--   _/json/write_ - Write a JSON payload of metrics data. This endpoint is quick for testing purposes, but is not as performant for production usage.
+-   _[{{% apiendpoint %}}prom/remote/write](/m3coordinator/api/remote/)_ - Write a Prometheus remote write query to M3DB with a binary snappy compressed Prometheus WriteRequest protobuf message.
+-   _{{% apiendpoint %}}json/write_ - Write a JSON payload of metrics data. This endpoint is quick for testing purposes, but is not as performant for production usage.
 
 For this quickstart, use the _{{% apiendpoint %}}json/write_ endpoint to write a tagged metric to M3DB with the following data in the request body, all fields are required:
 
@@ -369,9 +367,9 @@ Label names may contain ASCII letters, numbers, underscores, and Unicode charact
 
 ### Querying metrics
 
-M3DB supports three query engines: Prometheus (default, Graphite, and the M3 Query Engine.
+M3DB supports three query engines: Prometheus (default), Graphite, and the M3 Query Engine.
 
-As this quickstart uses Prometheus as the query engine, you have access to [all the features of PromQL queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). 
+This quickstart uses Prometheus as the query engine, and you have access to [all the features of PromQL queries](https://prometheus.io/docs/prometheus/latest/querying/basics/).
 
 To query metrics, use the _{{% apiendpoint %}}query_range_ endpoint with the following data in the request body, all fields are required:
 
