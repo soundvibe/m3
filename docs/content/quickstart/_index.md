@@ -64,7 +64,7 @@ When running the command above on Docker for Mac, Docker for Windows, and some L
 
 The single-node cluster Docker image uses this [sample configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml) by default.
 
-The file groups configuration into `coordinator` or `db` sections that represent the `M3Coordinator` and `M3DB` instances part of single-node cluster.
+The file groups configuration into `coordinator` or `db` sections that represent the `M3Coordinator` and `M3DB` instances of single-node cluster.
 
 {{% notice tip %}}
 You can find more information on configuring M3DB in the [operational guides section](/operational_guide/).
@@ -72,9 +72,9 @@ You can find more information on configuring M3DB in the [operational guides sec
 
 ## Organizing Data with Placements and Namespaces
 
-A time series database (TSDBs) typically consist of one node (or instance) to store metrics data. This setup is simple to use, but has issues with scalability over time as the quantity of metrics data written and read increases.
+A time series database (TSDBs) typically consist of one node (or instance) to store metrics data. This setup is simple to use but has issues with scalability over time as the quantity of metrics data written and read increases.
 
-As a distributed TSDB M3DB helps solves this problem by spreading metrics data, and demand for that data, across multiple nodes in a cluster. M3DB does this by splitting data into segments that match certain criteria (such as above a certain value) across nodes into {{< glossary_tooltip text="shards" term_id="shard" >}}.
+As a distributed TSDB, M3DB helps solves this problem by spreading metrics data, and demand for that data, across multiple nodes in a cluster. M3DB does this by splitting data into segments that match certain criteria (such as above a certain value) across nodes into {{< glossary_tooltip text="shards" term_id="shard" >}}.
 
 <!-- TODO: Find an image -->
 
@@ -331,7 +331,7 @@ This quickstart focuses on Prometheus metrics which consist of a value, a timest
 You can write metrics using one of two endpoints:
 
 -   _[{{% apiendpoint %}}prom/remote/write](/m3coordinator/api/remote/)_ - Write a Prometheus remote write query to M3DB with a binary snappy compressed Prometheus WriteRequest protobuf message.
--   _{{% apiendpoint %}}json/write_ - Write a JSON payload of metrics data. This endpoint is quick for testing purposes, but is not as performant for production usage.
+-   _{{% apiendpoint %}}json/write_ - Write a JSON payload of metrics data. This endpoint is quick for testing purposes but is not as performant for production usage.
 
 For this quickstart, use the _{{% apiendpoint %}}json/write_ endpoint to write a tagged metric to M3DB with the following data in the request body, all fields are required:
 
