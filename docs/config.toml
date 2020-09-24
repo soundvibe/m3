@@ -83,6 +83,11 @@ offlineSearch = false
   themeVariant = "blue"
   twitter = "m3db_io"
 
+  [params.api]
+
+    localCordinator = "http://localhost:7201"
+    apiEndpoint = "/api/v1/"
+
 # TODO: Do not like doing this really
 [markup]
   [markup.goldmark]
