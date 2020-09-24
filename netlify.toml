@@ -9,6 +9,6 @@
   # directory located at the absolute path "root/project/build-output"
   publish = "docs/public"
 
-[context."chrischinch/clustering-quickstart"]
+[context."chrischinch/how-to"]
   command = "hugo"  
   HUGO_VERSION = "0.74.3"
