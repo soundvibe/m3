@@ -1,10 +1,11 @@
 ---
-menuTitle: Manual Cluster Deployment
+linktitle: "Quickstart using binaries"
 weight: 2
 ---
 
 <!-- TODO: Combine with other quickstart? -->
-# Creating a Single Node M3DB Cluster - Binaries
+
+# Creating a Single Node M3DB Cluster with Binaries
 
 This guide shows how to install and configure M3DB, create a single-node cluster, and read and write metrics to it.
 
@@ -17,10 +18,11 @@ Deploying a single-node M3DB cluster is a great way to experiment with M3DB and 
 M3 has pre-built binaries available for Linux and macOS. [Download the latest release from GitHub](https://github.com/m3db/m3/releases/latest).
 
 ## Build from source
+
 ### Prerequisites
 
-- [Go 1.10 or higher](https://golang.org/dl/)
-- [Make](https://www.gnu.org/software/make/)
+-   [Go 1.10 or higher](https://golang.org/dl/)
+-   [Make](https://www.gnu.org/software/make/)
 
 ### Build source
 
@@ -28,12 +30,7 @@ M3 has pre-built binaries available for Linux and macOS. [Download the latest re
 make m3dbnode
 ```
 
-
-
-
 <!-- TODO: Separate out into included partials -->
-
-
 
 ## Start Binary
 
@@ -77,7 +74,9 @@ Depending on your operating system setup, you might need to prefix the command w
 {{% tab name="Output" %}}
 
 <!-- TODO: Perfect image, pref with terminalizer -->
+
 <!-- TODO: Update image -->
+
 ![Docker pull and run](/docker-install.gif)
 
 {{% /tab %}}
@@ -86,9 +85,6 @@ Depending on your operating system setup, you might need to prefix the command w
 {{% notice info %}}
 When running the command above on macOS you may see errors about "too many open files." To fix this in your current terminal, use `ulimit` to increase the upper limit, for example `ulimit -n 10240`.
 {{% /notice %}}
-
-
-
 
 ## Configuration
 
@@ -99,7 +95,6 @@ The file groups configuration into `coordinator` or `db` sections that represent
 {{% notice tip %}}
 You can find more information on configuring M3DB in the [operational guides section](/operational_guide/).
 {{% /notice %}}
-
 
 ## Organizing Data with Placements and Namespaces
 
