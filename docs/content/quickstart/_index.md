@@ -42,7 +42,6 @@ The command below creates a persistent data directory on the host operating syst
 {{% tab name="Command" %}}
 
 ```shell
-docker pull quay.io/m3db/m3dbnode:latest
 docker run -p 7201:7201 -p 7203:7203 --name m3db -v $(pwd)/m3db_data:/var/lib/m3db quay.io/m3db/m3dbnode:latest
 ```
 
@@ -65,7 +64,7 @@ When running the command above on Docker for Mac, Docker for Windows, and some L
 The single-node cluster Docker image uses this [sample configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml) by default.
 
 The file groups configuration into `coordinator` or `db` sections that represent the `M3Coordinator` and `M3DB` instances of single-node cluster.
-
+<!-- TODO: Replicate relevant sections -->
 {{% notice tip %}}
 You can find more information on configuring M3DB in the [operational guides section](/operational_guide/).
 {{% /notice %}}
@@ -94,10 +93,11 @@ This quickstart uses the _{{% apiendpoint %}}database/create_ endpoint that crea
 You can create [placements](/operational_guide/placement_configuration/) and [namespaces](/operational_guide/namespace_configuration/#advanced-hard-way) separately if you need more control over their settings.
 
 The `namespaceName` argument must match the namespace in the `local` section of the `M3Coordinator` YAML configuration. If you [add any namespaces](/operational_guide/namespace_configuration.md) you also need to add them to the `local` section of `M3Coordinator`'s YAML config.
-
+<!-- TODO: Another terminal -->
 {{< tabs name="create_placement_namespace" >}}
 {{% tab name="Command" %}}
 
+<!-- TODO: Add jq -->
 ```json
 curl -X POST {{% apiendpoint %}}database/create -d '{
   "type": "local",
