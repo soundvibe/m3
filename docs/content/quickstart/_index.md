@@ -97,14 +97,7 @@ The `namespaceName` argument must match the namespace in the `local` section of 
 {{< tabs name="create_placement_namespace" >}}
 {{% tab name="Command" %}}
 
-<!-- TODO: Add jq -->
-```json
-curl -X POST {{% apiendpoint %}}database/create -d '{
-  "type": "local",
-  "namespaceName": "default",
-  "retentionTime": "12h"
-}'
-```
+{{% codeinclude file="/static/quickstart/create-database.sh" language="shell" %}}
 
 {{% /tab %}}
 {{% tab name="Output" %}}
@@ -390,10 +383,10 @@ You need to encode the query below.
 {{% /notice %}}
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range?
-  query=third_avenue&
-  start=$(date "+%s" -d "45 seconds ago")&
-  end=$(date "+%s")&
+curl -X "POST" "{{% apiendpoint %}}query_range? \
+  query=third_avenue& \
+  start=$(date "+%s" -d "45 seconds ago")& \
+  end=$(date "+%s")& \
   step=5s" | jq .
 ```
 
@@ -405,10 +398,10 @@ You need to encode the query below.
 {{% /notice %}}
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range?
-  query=third_avenue&
-  start=$(date -v -45S "+%s")&
-  end=$(date "+%s")&
+curl -X "POST" "{{% apiendpoint %}}query_range? \
+  query=third_avenue& \
+  start=$(date -v -45S "+%s")& \
+  end=$(date "+%s")& \
   step=5s" | jq .
 ```
 
@@ -460,10 +453,10 @@ You need to encode the query below.
 {{% /notice %}}
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range?
-  query=third_avenue > 6000
-  start=$(date "+%s" -d "45 seconds ago")&
-  end=$(date "+%s")&
+curl -X "POST" "{{% apiendpoint %}}query_range? \
+  query=third_avenue > 6000 \
+  start=$(date "+%s" -d "45 seconds ago")& \
+  end=$(date "+%s")& \
   step=5s" | jq .
 ```
 
@@ -475,10 +468,10 @@ You need to encode the query below.
 {{% /notice %}}
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range?
-  query=third_avenue > 6000
-  start=$(date -v -45S "+%s")&
-  end=$(date "+%s")&
+curl -X "POST" "{{% apiendpoint %}}query_range? \
+  query=third_avenue > 6000 \
+  start=$(date -v -45S "+%s")& \
+  end=$(date "+%s")& \
   step=5s" | jq .
 ```
 
