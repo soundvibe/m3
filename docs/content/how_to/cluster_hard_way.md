@@ -5,7 +5,7 @@ weight: 2
 ---
 
 This guide shows you the steps involved in creating an M3DB cluster using M3 binaries, typically you would automate this with infrastructure as code tools such as [Terraform](#) or [Kubernetes](#).
-
+<!-- TODO: How do you get the binary! -->
 ## M3 Architecture
 
 Here's a typical M3 deployment:
@@ -21,13 +21,11 @@ An M3DB deployment has three role types:
 -   **Coordinator**: The `m3coordinator` coordinates reads and writes across all nodes in the cluster. It's a lightweight process, and does not store any data. This role typically runs alongside a Prometheus instance, or is part of a collector agent.
 <!-- TODO: Collector agent? This is mostly for Chronosphere, so probably remove all mentions and mention external collectors such as Prometheus -->
 -   **Storage Node**: The `m3dbnode` processes are the workhorses of M3, they store data and serve reads and writes.
-<!-- TODO: Mention it at all? No… -->
--   **Seed Node**: These are storage nodes, and also run an embedded etcd server. This allows the M3DB processes running across the cluster to reason about the placement and configuration of the cluster in a consistent manner.
 
-<!-- TODO: Define large, or reverse logic -->
-
+## Prerequisites
+<!-- TODO: etcd and why? -->
 {{% notice note %}}
-In very large deployments, you should use a dedicated etcd cluster, and only use M3DB Storage and Coordinator nodes.
+M3 storage nodes also have an embedded etcd server you can use for small test clusters which we call a **Seed Node** when run this way. See the `etcdClusters` section of [this example configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml).
 {{% /notice %}}
 
 ## Provision your host
@@ -44,9 +42,9 @@ If you use AWS or GCP, we recommend you use static IPs so that if you need to re
 
 <!-- TODO: Connect to glossary terms -->
 
-This example creates three static IP addresses for three **seed nodes**.
+This example creates three static IP addresses for three **storage nodes**.
 
-This guide assumes you have host names configured, i.e., running `hostname` on a host in the cluster returns the host ID you will use when creating the M3DB cluster placement.
+This guide assumes you have host names configured, i.e., running `hostname` on a host in the cluster returns the host ID you use when creating the M3DB cluster placement.
 
 <!-- TODO: Check this and also streamline, still quite horrible to parse -->
 
@@ -77,10 +75,8 @@ Depending on the default limits of your bare-metal machine or VM, M3 may need so
 
 You configure each M3 component by passing the location of a YAML file with the `-f` argument.
 
-<!-- TODO: Link to how to do that, see above on etcd -->
-
 {{% notice note %}}
-The steps in this guide have the following 3 seed nodes, you need to change your configuration to suit the details of yours. If you use a dedicated etcd cluster, you need to update the `etcdClusters` details to match it.
+The steps in this guide have the following 3 seed nodes, you need to change your configuration to suit the details of yours, including the details of an etcd cluster in the `etcdClusters` section.
 {{% /notice %}}
 
 -   m3db001 (Region=us-east1, Zone=us-east1-a, Static IP=10.142.0.1)
@@ -89,10 +85,12 @@ The steps in this guide have the following 3 seed nodes, you need to change your
 
 ### M3DB node
 
-[Start with the M3DB configuration template](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-cluster-template.yml) and change it to suit your cluster. This example updates the `service` and `seedNodes` sections to match the node details above:
+[Start with the M3DB configuration template](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-cluster-template.yml) and change it to suit your cluster. 
+
+The example below connects to an etcd instance in a zone called `eu-1`
+This example updates the `service` and `seedNodes` sections to match the node details above:
 
 <!-- TODO: Add more details on config items here -->
-<!-- TODO: Remove seednodes, we are just creating db nodes -->
 ```yaml
 config:
   service:
@@ -106,17 +104,8 @@ config:
           - 10.142.0.1:2379
           - 10.142.0.2:2379
           - 10.142.0.3:2379
-  seedNodes:
-    initialCluster:
-      - hostID: m3db001
-        endpoint: http://10.142.0.1:2380
-      - hostID: m3db002
-        endpoint: http://10.142.0.2:2380
-      - hostID: m3db003
-        endpoint: http://10.142.0.3:2380
 ```
-<!-- TODO: Change title -->
-## Start the seed nodes
+## Start the storage nodes
 
 Start each seed node in the cluster using the same configuration file. 
 
