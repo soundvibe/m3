@@ -64,7 +64,9 @@ When running the command above on Docker for Mac, Docker for Windows, and some L
 The single-node cluster Docker image uses this [sample configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml) by default.
 
 The file groups configuration into `coordinator` or `db` sections that represent the `M3Coordinator` and `M3DB` instances of single-node cluster.
+
 <!-- TODO: Replicate relevant sections -->
+
 {{% notice tip %}}
 You can find more information on configuring M3DB in the [operational guides section](/operational_guide/).
 {{% /notice %}}
@@ -93,7 +95,9 @@ This quickstart uses the _{{% apiendpoint %}}database/create_ endpoint that crea
 You can create [placements](/operational_guide/placement_configuration/) and [namespaces](/operational_guide/namespace_configuration/#advanced-hard-way) separately if you need more control over their settings.
 
 The `namespaceName` argument must match the namespace in the `local` section of the `M3Coordinator` YAML configuration. If you [add any namespaces](/operational_guide/namespace_configuration.md) you also need to add them to the `local` section of `M3Coordinator`'s YAML config.
+
 <!-- TODO: Another terminal -->
+
 {{< tabs name="create_placement_namespace" >}}
 {{% tab name="Command" %}}
 
@@ -378,31 +382,25 @@ Below are some examples using the metrics written above.
 {{< tabs name="example_promql_regex" >}}
 {{% tab name="Linux" %}}
 
-{{% notice tip %}}
-You need to encode the query below.
-{{% /notice %}}
+<!-- TODO: Check this on Linux -->
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range? \
-  query=third_avenue& \
-  start=$(date "+%s" -d "45 seconds ago")& \
-  end=$(date "+%s")& \
-  step=5s" | jq .
+curl -X "POST" -G "{{% apiendpoint %}}query_range" \
+  -d "query=third_avenue" \
+  -d "start=$(date "+%s" -d "45 seconds ago")" \
+  -d "end=$( date +%s )" \
+  -d "step=5s" | jq .  
 ```
 
 {{% /tab %}}
 {{% tab name="macOS/BSD" %}}
 
-{{% notice tip %}}
-You need to encode the query below.
-{{% /notice %}}
-
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range? \
-  query=third_avenue& \
-  start=$(date -v -45S "+%s")& \
-  end=$(date "+%s")& \
-  step=5s" | jq .
+curl -X "POST" -G "{{% apiendpoint %}}query_range" \
+  -d "query=third_avenue" \
+  -d "start=$( date -v -45S +%s )" \
+  -d "end=$( date +%s )" \
+  -d "step=5s" | jq .
 ```
 
 {{% /tab %}}
@@ -448,31 +446,25 @@ curl -X "POST" "{{% apiendpoint %}}query_range? \
 {{< tabs name="example_promql_range" >}}
 {{% tab name="Linux" %}}
 
-{{% notice tip %}}
-You need to encode the query below.
-{{% /notice %}}
+<!-- TODO: Check Linux command -->
 
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range? \
-  query=third_avenue > 6000 \
-  start=$(date "+%s" -d "45 seconds ago")& \
-  end=$(date "+%s")& \
-  step=5s" | jq .
+curl -X "POST" -G "{{% apiendpoint %}}query_range" \
+  -d "query=third_avenue > 6000" \
+  -d "start=$(date "+%s" -d "45 seconds ago")" \
+  -d "end=$( date +%s )" \
+  -d "step=5s" | jq .
 ```
 
 {{% /tab %}}
 {{% tab name="macOS/BSD" %}}
 
-{{% notice tip %}}
-You need to encode the query below.
-{{% /notice %}}
-
 ```shell
-curl -X "POST" "{{% apiendpoint %}}query_range? \
-  query=third_avenue > 6000 \
-  start=$(date -v -45S "+%s")& \
-  end=$(date "+%s")& \
-  step=5s" | jq .
+curl -X "POST" -G "{{% apiendpoint %}}query_range" \
+  -d "query=third_avenue > 6000" \
+  -d "start=$(date -v -45S "+%s")" \
+  -d "end=$( date +%s )" \
+  -d "step=5s" | jq .
 ```
 
 {{% /tab %}}
