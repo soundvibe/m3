@@ -19,11 +19,12 @@ An M3DB deployment has three role types:
 <!-- TODO: create glossary terms -->
 <!-- TODO: These are mentioned but we don't do anything with them -->
 -   **Coordinator**: The `m3coordinator` coordinates reads and writes across all nodes in the cluster. It's a lightweight process, and does not store any data. This role typically runs alongside a Prometheus instance, or is part of a collector agent.
-<!-- TODO: Collector agent? -->
+<!-- TODO: Collector agent? This is mostly for Chronosphere, so probably remove all mentions and mention external collectors such as Prometheus -->
 -   **Storage Node**: The `m3dbnode` processes are the workhorses of M3, they store data and serve reads and writes.
--   **Seed Node**: These are storage nodes, and also run an embedded etcd server. This allows the M3DB processes running across the cluster to reason about the topology and configuration of the cluster in a consistent manner.
+<!-- TODO: Mention it at all? No… -->
+-   **Seed Node**: These are storage nodes, and also run an embedded etcd server. This allows the M3DB processes running across the cluster to reason about the placement and configuration of the cluster in a consistent manner.
 
-<!-- TODO: Define large -->
+<!-- TODO: Define large, or reverse logic -->
 
 {{% notice note %}}
 In very large deployments, you should use a dedicated etcd cluster, and only use M3DB Storage and Coordinator nodes.
@@ -60,6 +61,7 @@ hostID:
   resolver: environment
   envVarName: M3DB_HOST_ID
 ```
+<!-- TODO: Can now resolve environment variables into config, kind of like you can with k8s config, look in collector examples in meta docs, so just one config file (change) with envvar for each -->
 
 Then start the `m3dbnode` process with:
 
@@ -75,7 +77,7 @@ Depending on the default limits of your bare-metal machine or VM, M3 may need so
 
 You configure each M3 component by passing the location of a YAML file with the `-f` argument.
 
-<!-- TODO: Link to how to do that -->
+<!-- TODO: Link to how to do that, see above on etcd -->
 
 {{% notice note %}}
 The steps in this guide have the following 3 seed nodes, you need to change your configuration to suit the details of yours. If you use a dedicated etcd cluster, you need to update the `etcdClusters` details to match it.
@@ -90,7 +92,7 @@ The steps in this guide have the following 3 seed nodes, you need to change your
 [Start with the M3DB configuration template](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-cluster-template.yml) and change it to suit your cluster. This example updates the `service` and `seedNodes` sections to match the node details above:
 
 <!-- TODO: Add more details on config items here -->
-
+<!-- TODO: Remove seednodes, we are just creating db nodes -->
 ```yaml
 config:
   service:
@@ -113,7 +115,7 @@ config:
       - hostID: m3db003
         endpoint: http://10.142.0.3:2380
 ```
-
+<!-- TODO: Change title -->
 ## Start the seed nodes
 
 Start each seed node in the cluster using the same configuration file. 
@@ -136,7 +138,9 @@ This guide uses the _{{% apiendpoint %}}database/create_ endpoint that creates a
 
 You can create [placements](https://docs.m3db.io/operational_guide/placement_configuration/) and [namespaces](https://docs.m3db.io/operational_guide/namespace_configuration/#advanced-hard-way) separately if you need more control over their settings.
 
-<!-- TODO: Quickstart guide mentions namespaceName needs to match coordinator setting, but we haven't configured that yet? -->
+<!-- TODO: Quickstart guide mentions namespaceName needs to match coordinator setting, but we haven't configured that yet?
+
+There is a coordinator in the config, just not mentioned here -->
 
 {{< tabs name="database_create" >}}
 {{% tab name="Command" %}}
