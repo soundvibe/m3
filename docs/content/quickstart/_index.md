@@ -96,12 +96,12 @@ You can create [placements](/operational_guide/placement_configuration/) and [na
 
 The `namespaceName` argument must match the namespace in the `local` section of the `M3Coordinator` YAML configuration. If you [add any namespaces](/operational_guide/namespace_configuration.md) you also need to add them to the `local` section of `M3Coordinator`'s YAML config.
 
-<!-- TODO: Another terminal -->
+In another terminal, use the following command.
 
 {{< tabs name="create_placement_namespace" >}}
 {{% tab name="Command" %}}
 
-{{% codeinclude file="/static/quickstart/create-database.sh" language="shell" %}}
+{{% codeinclude file="includes/quickstart/create-database.sh" language="shell" %}}
 
 {{% /tab %}}
 {{% tab name="Output" %}}
@@ -347,17 +347,17 @@ Label names may contain ASCII letters, numbers, underscores, and Unicode charact
 {{< tabs name="write_metrics" >}}
 {{< tab name="Command 1" >}}
 
-{{% codeinclude file="/static/quickstart/write-metrics-1.sh" language="shell" %}}
+{{% codeinclude file="includes/quickstart/write-metrics-1.sh" language="shell" %}}
 
 {{< /tab >}}
 {{< tab name="Command 2" >}}
 
-{{% codeinclude file="/static/quickstart/write-metrics-2.sh" language="shell" %}}
+{{% codeinclude file="includes/quickstart/write-metrics-2.sh" language="shell" %}}
 
 {{< /tab >}}
 {{< tab name="Command 3" >}}
 
-{{% codeinclude file="/static/quickstart/write-metrics-3.sh" language="shell" %}}
+{{% codeinclude file="includes/quickstart/write-metrics-3.sh" language="shell" %}}
 
 {{< /tab >}}
 {{< /tabs >}}
