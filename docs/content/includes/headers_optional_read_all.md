@@ -1,10 +1,4 @@
-<<<<<<< HEAD:docs/includes/headers_optional_read_all.md
-{{% fileinclude file="/includes/headers_optional_read_limits.md" %}}
-
-- `M3-Restrict-By-Tags-JSON`:  
-=======
 * `M3-Restrict-By-Tags-JSON`:  
->>>>>>> braskin/hugo_site:docs/content/includes/headers_optional_read_all.md
  If this header is set it can ensure specific label matching is performed as part
 of every query including series metadata endpoints. As an example, the following 
 header would unconditionally cause `globaltag=somevalue` to be a part of all queries
