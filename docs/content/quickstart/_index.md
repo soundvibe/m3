@@ -369,7 +369,7 @@ Label names may contain ASCII letters, numbers, underscores, and Unicode charact
 
 M3DB supports three query engines: Prometheus (default), Graphite, and the M3 Query Engine.
 
-This quickstart uses Prometheus as the query engine, and you have access to [all the features of PromQL queries](https://prometheus.io/docs/prometheus/latest/querying/basics/).
+This guide uses Prometheus as the query engine, and you have access to [all the features of PromQL queries](https://prometheus.io/docs/prometheus/latest/querying/basics/).
 
 To query metrics, use the _{{% apiendpoint %}}query_range_ endpoint with the following data in the request body, all fields are required:
 
@@ -514,7 +514,7 @@ curl -X "POST" "{{% apiendpoint %}}query_range?
 
 ## Next Steps
 
-This quickstart covered getting a single-node M3DB cluster running, and writing and querying metrics to the cluster. Some next steps are:
+This guide covered getting an M3 cluster running using application binaries, and writing and querying metrics to the cluster. Some next steps are:
 
 -   one
 -   two
