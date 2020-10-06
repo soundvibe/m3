@@ -5,29 +5,29 @@ weight: 2
 ---
 
 This guide shows you the steps involved in creating an M3DB cluster using M3 binaries, typically you would automate this with infrastructure as code tools such as Terraform or Kubernetes.
+
 ## M3 Architecture
 
 Here's a typical M3 deployment:
 
-<!-- TODO: What/where is a remote host and these don't always have to be different node instances? -->
+<!-- TODO: Update image -->
 
 ![Typical Deployment](/cluster_architecture.png)
 
 An M3DB deployment has three role types:
 
-<!-- TODO: create glossary terms -->
 <!-- TODO: These are mentioned but we don't do anything with them -->
--   **Coordinator**: The `m3coordinator` coordinates reads and writes across all nodes in the cluster. It's a lightweight process, and does not store any data. This role typically runs alongside a Prometheus instance, or is part of a collector agent.
-<!-- TODO: Collector agent? This is mostly for Chronosphere, so probably remove all mentions and mention external collectors such as Prometheus -->
+
+-   {{< glossary_tooltip text="Coordinator" term_id="m3coordinator" >}}: `m3coordinator` nodes coordinate reads and writes across all nodes in the cluster. It's a lightweight process, and does not store any data. This role typically runs alongside a Prometheus instance, or is part of a collector agent.
 -   **Storage Node**: The `m3dbnode` processes are the workhorses of M3, they store data and serve reads and writes.
 
 ## Prerequisites
 
 M3 uses [etcd](https://etcd.io/) as a distributed key-value storage for the following functions:
 
-- Update cluster configuration in realtime
-- Manage placements for distributed and sharded clusters
-- Perform leader-election in M3Aggregator
+-   Update cluster configuration in realtime
+-   Manage placements for distributed and sharded clusters
+-   Perform leader-election in M3Aggregator
 
 {{% notice note %}}
 M3 storage nodes also have an embedded etcd server you can use for small test clusters which we call a **Seed Node** when run this way. See the `etcdClusters` section of [this example configuration file](https://github.com/m3db/m3/blob/master/src/dbnode/config/m3dbnode-local-etcd.yml).
@@ -49,8 +49,6 @@ M3 in production can run on local or cloud-based VMs, or bare-metal servers. M3 
 If you use AWS or GCP, we recommend you use static IPs so that if you need to replace a host, you don't have to update configuration files on all the hosts, but decommission the old seed node and provision a new seed node with the same host ID and static IP that the old seed node had. If you're using AWS you can use an [Elastic Network Interface](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) on a Virtual Private Cloud (VPC) and for GCP you can use an [internal static IP address](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-internal-ip-address).
 {{% /notice %}}
 
-<!-- TODO: Connect to glossary terms -->
-
 This example creates three static IP addresses for three **storage nodes**.
 
 This guide assumes you have host names configured, i.e., running `hostname` on a host in the cluster returns the host ID you use when creating the M3DB cluster placement.
@@ -65,10 +63,9 @@ For example, if you used `M3DC_HOST_ID` for the environment variable name, use t
 
 ```yaml
 hostID:
-  resolver: environment
-  envVarName: M3DB_HOST_ID
+  resolver: hostname
+    - ${M3DC_HOST_ID:""}
 ```
-<!-- TODO: Can now resolve environment variables into config, kind of like you can with k8s config, look in collector examples in meta docs, so just one config file (change) with envvar for each -->
 
 Then start the `m3dbnode` process with:
 
@@ -100,6 +97,7 @@ The example below connects to an etcd instance in a zone called `eu-1`
 This example updates the `service` and `seedNodes` sections to match the node details above:
 
 <!-- TODO: Add more details on config items here -->
+
 ```yaml
 config:
   service:
@@ -117,12 +115,10 @@ config:
 
 ## Start the storage nodes
 
-Start each seed node in the cluster using the same configuration file. 
-
-<!-- TODO: Do you need M3DB_HOST_ID here? And thus need to change the value in each config file? -->
+Start each seed node in the cluster using the same configuration file, and adjusting the `M3DB_HOST_ID` value to match the host name.
 
 ```shell
-m3dbnode -f <config-file.yml>
+M3DB_HOST_ID=m3db001 m3dbnode -f <config-file.yml>
 ```
 
 {{% notice tip %}}
