@@ -103,6 +103,10 @@ In another terminal, use the following command.
 
 {{% codeinclude file="includes/quickstart/create-database.sh" language="shell" %}}
 
+{{% notice tip %}}
+The Docker command used above creates a Docker [persistent volume](https://docs.docker.com/storage/volumes/) to keep the data M3 creates on your host file system between container restarts. If have already followed this tutorial, the namespace already exists. You can clear the data by deleting the contents of the _m3db_data_ folder, or deleting the namespace with [the DELETE endpoint](operational_guide/namespace_configuration/#deleting-a-namespace).
+{{% /notice %}}
+
 {{% /tab %}}
 {{% tab name="Output" %}}
 
